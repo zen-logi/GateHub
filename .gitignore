@@ -1,6 +1,9 @@
 ## .NET
 bin/
 obj/
+
+## Agent
+.agent/
 *.user
 *.suo
 *.userosscache

@@ -35,6 +35,12 @@ jobs:
       - name: Restore
         run: dotnet restore GateHub.slnx
 
+      - name: Build
+        run: dotnet build GateHub.slnx --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet run --project tests/GateHub.Tests/GateHub.Tests.csproj --configuration Release --no-build
+
       - name: Publish Server
         run: dotnet publish src/GateHub.Server -c Release -r ${{ matrix.rid }} -o publish/server --no-restore
 

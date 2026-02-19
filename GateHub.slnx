@@ -4,4 +4,7 @@
     <Project Path="src/GateHub.Server/GateHub.Server.csproj" />
     <Project Path="src/GateHub.Shared/GateHub.Shared.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/GateHub.Tests/GateHub.Tests.csproj" />
+  </Folder>
 </Solution>

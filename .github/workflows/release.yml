@@ -1,0 +1,96 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            rid: win-x64
+            server-artifact: GateHub.Server-win-x64
+            client-artifact: GateHub.Client-win-x64
+          - os: macos-latest
+            rid: osx-arm64
+            server-artifact: GateHub.Server-osx-arm64
+            client-artifact: GateHub.Client-osx-arm64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore GateHub.slnx
+
+      - name: Publish Server
+        run: dotnet publish src/GateHub.Server -c Release -r ${{ matrix.rid }} -o publish/server --no-restore
+
+      - name: Publish Client
+        run: dotnet publish src/GateHub.Client -c Release -r ${{ matrix.rid }} -o publish/client --no-restore
+
+      - name: Archive Server (Windows)
+        if: runner.os == 'Windows'
+        run: Compress-Archive -Path publish/server/* -DestinationPath ${{ matrix.server-artifact }}.zip
+
+      - name: Archive Client (Windows)
+        if: runner.os == 'Windows'
+        run: Compress-Archive -Path publish/client/* -DestinationPath ${{ matrix.client-artifact }}.zip
+
+      - name: Archive Server (macOS)
+        if: runner.os == 'macOS'
+        run: cd publish/server && zip -r ../../${{ matrix.server-artifact }}.zip .
+
+      - name: Archive Client (macOS)
+        if: runner.os == 'macOS'
+        run: cd publish/client && zip -r ../../${{ matrix.client-artifact }}.zip .
+
+      - name: Upload Server artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.server-artifact }}
+          path: ${{ matrix.server-artifact }}.zip
+
+      - name: Upload Client artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.client-artifact }}
+          path: ${{ matrix.client-artifact }}.zip
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Generate version tag
+        id: version
+        run: echo "tag=v$(date +'%Y.%m.%d')-$(echo ${{ github.sha }} | cut -c1-7)" >> "$GITHUB_OUTPUT"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: Release ${{ steps.version.outputs.tag }}
+          generate_release_notes: true
+          files: |
+            artifacts/GateHub.Server-win-x64/*.zip
+            artifacts/GateHub.Client-win-x64/*.zip
+            artifacts/GateHub.Server-osx-arm64/*.zip
+            artifacts/GateHub.Client-osx-arm64/*.zip

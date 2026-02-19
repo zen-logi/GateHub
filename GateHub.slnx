@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/GateHub.Client/GateHub.Client.csproj" />
+    <Project Path="src/GateHub.Server/GateHub.Server.csproj" />
+    <Project Path="src/GateHub.Shared/GateHub.Shared.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,6 @@
+@GateHub.Server_HostAddress = http://localhost:5261
+
+GET {{GateHub.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
